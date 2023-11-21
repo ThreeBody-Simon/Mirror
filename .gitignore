@@ -16,6 +16,7 @@ UserSettings/Search.settings
 # ===================================== #
 Database.sqlite
 Database/
+Builds/
 
 # ===================================== #
 # Visual Studio / MonoDevelop / Rider   #
@@ -38,6 +39,7 @@ Source/Source.sln
 Output/
 bin/
 .vs/
+.vscode/
 .idea/
 Mirror/packages
 .mfractor

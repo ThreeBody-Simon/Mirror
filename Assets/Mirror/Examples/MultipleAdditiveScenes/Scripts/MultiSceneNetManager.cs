@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/*
-	Documentation: https://mirror-networking.gitbook.io/docs/components/network-manager
-	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkManager.html
-*/
-
 namespace Mirror.Examples.MultipleAdditiveScenes
 {
     [AddComponentMenu("")]
@@ -31,6 +26,18 @@ namespace Mirror.Examples.MultipleAdditiveScenes
 
         // Sequential index used in round-robin deployment of players into instances and score positioning
         int clientIndex;
+
+        public static new MultiSceneNetManager singleton { get; private set; }
+
+        /// <summary>
+        /// Runs on both Server and Client
+        /// Networking is NOT initialized when this fires
+        /// </summary>
+        public override void Awake()
+        {
+            base.Awake();
+            singleton = this;
+        }
 
         #region Server System Callbacks
 
@@ -66,7 +73,7 @@ namespace Mirror.Examples.MultipleAdditiveScenes
             playerScore.matchIndex = clientIndex % subScenes.Count;
 
             // Do this only on server, not on clients
-            // This is what allows the NetworkSceneChecker on player and scene objects
+            // This is what allows Scene Interest Management
             // to isolate matches per scene instance on server.
             if (subScenes.Count > 0)
                 SceneManager.MoveGameObjectToScene(conn.identity.gameObject, subScenes[clientIndex % subScenes.Count]);
@@ -118,7 +125,8 @@ namespace Mirror.Examples.MultipleAdditiveScenes
         IEnumerator ServerUnloadSubScenes()
         {
             for (int index = 0; index < subScenes.Count; index++)
-                yield return SceneManager.UnloadSceneAsync(subScenes[index]);
+                if (subScenes[index].IsValid())
+                    yield return SceneManager.UnloadSceneAsync(subScenes[index]);
 
             subScenes.Clear();
             subscenesLoaded = false;
@@ -131,8 +139,8 @@ namespace Mirror.Examples.MultipleAdditiveScenes
         /// </summary>
         public override void OnStopClient()
         {
-            // make sure we're not in host mode
-            if (mode == NetworkManagerMode.ClientOnly)
+            // Make sure we're not in ServerOnly mode now after stopping host client
+            if (mode == NetworkManagerMode.Offline)
                 StartCoroutine(ClientUnloadSubScenes());
         }
 
@@ -140,10 +148,8 @@ namespace Mirror.Examples.MultipleAdditiveScenes
         IEnumerator ClientUnloadSubScenes()
         {
             for (int index = 0; index < SceneManager.sceneCount; index++)
-            {
                 if (SceneManager.GetSceneAt(index) != SceneManager.GetActiveScene())
                     yield return SceneManager.UnloadSceneAsync(SceneManager.GetSceneAt(index));
-            }
         }
 
         #endregion

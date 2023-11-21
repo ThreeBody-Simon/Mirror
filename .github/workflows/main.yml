@@ -3,6 +3,20 @@ name: Main
 on:
   workflow_dispatch:
   pull_request:
+    branches:
+    - master
+    paths-ignore:
+      - 'Packages/**'
+      - 'ProjectSettings/**'
+      - '.github/**'
+      - '.gitattributes'
+      - '.gitignore'
+      - '.editorconfig'
+      - 'LICENSE'
+      - '**.md'
+      - '**.yml'
+      - '**.txt'
+      - '**.ps1'
   push:
     branches:
     - master
@@ -14,10 +28,10 @@ on:
       - '.gitignore'
       - '.editorconfig'
       - 'LICENSE'
-      - '*.md'
-      - '*.yml'
-      - '*.txt'
-      - '*.ps1'
+      - '**.md'
+      - '**.yml'
+      - '**.txt'
+      - '**.ps1'
   
 jobs:
   RunUnityTests:
@@ -33,6 +47,7 @@ jobs:
 
   Release:
     name: Semantic Release
+    if: github.event_name == 'push'
     needs: RunUnityTests
     uses: ./.github/workflows/Semantic.yml
     secrets: inherit

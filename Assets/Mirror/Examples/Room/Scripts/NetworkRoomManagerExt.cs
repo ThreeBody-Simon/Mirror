@@ -14,6 +14,18 @@ namespace Mirror.Examples.NetworkRoom
         [Tooltip("Reward Prefab for the Spawner")]
         public GameObject rewardPrefab;
 
+        public static new NetworkRoomManagerExt singleton { get; private set; }
+
+        /// <summary>
+        /// Runs on both Server and Client
+        /// Networking is NOT initialized when this fires
+        /// </summary>
+        public override void Awake()
+        {
+            base.Awake();
+            singleton = this;
+        }
+
         /// <summary>
         /// This is called on the server when a networked scene finishes loading.
         /// </summary>
@@ -64,11 +76,14 @@ namespace Mirror.Examples.NetworkRoom
         public override void OnRoomServerPlayersReady()
         {
             // calling the base method calls ServerChangeScene as soon as all players are in Ready state.
-#if UNITY_SERVER
-            base.OnRoomServerPlayersReady();
-#else
-            showStartButton = true;
-#endif
+            if (Utils.IsHeadless())
+            {
+                base.OnRoomServerPlayersReady();
+            }
+            else
+            {
+                showStartButton = true;
+            }
         }
 
         public override void OnGUI()
